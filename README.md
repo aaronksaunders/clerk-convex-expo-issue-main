@@ -16,6 +16,9 @@ It is based on the official Clerk and Convex quickstart templates, with extra no
 - Passes the Clerk JWT token to Convex so backend queries are authenticated
 - Uses Convex to run protected queries (e.g., `whoami`) that require a valid Clerk user
 - Shows how to sync authentication state between Clerk and Convex in a React Native/Expo app
+- Demonstrates a user-owned task list (Tasks tab) where each user's data is private and authenticated via Clerk/Convex
+- No user table is synced between Clerk and Convex; all user identity is derived live from Clerk JWT via `ctx.auth.getUserIdentity()` in Convex functions
+- If you want to store extra user-specific data, create a `users` table in Convex and upsert on first login (no webhook required)
 
 ---
 
@@ -71,12 +74,63 @@ npx expo start
 
 > **Note:** These are common stumbling blocks and tips for smooth development.
 
+- **No user sync needed:** Convex does not require a user table to be synced with Clerk. All user identity is checked live via JWT on every request.
 - **Token Sync:** Convex and Clerk auth state are not always in sync instantly. Use `useConvexAuth()` to check if Convex is ready before running authenticated queries.
 - **ConvexProviderWithClerk:** This provider automatically passes the Clerk JWT to Convex. You do not need to manually fetch or set the token.
 - **auth.config.ts domain:** The `domain` must match your Clerk instance's issuer (not your Convex URL!). If you see `No auth provider found matching the given token`, check this value.
 - **Session Persistence:** The app uses `expo-secure-store` for Clerk session tokens. If you have session issues, try clearing SecureStore or reinstalling the app.
 - **Never edit node_modules:** Ignore warnings or errors from `node_modules/convex/tsconfig.json`—these do not affect your app.
 - **Development keys:** Clerk will warn if you use development keys in production. Always use production keys for deployed apps.
+
+---
+
+## 🏊‍♂️ Auth Flow Swim Lane Diagram
+
+Below is a swim lane diagram showing the authentication flow and token sync between Expo (React Native), Clerk, and Convex:
+
+```mermaid
+sequenceDiagram
+   participant User
+   participant ExpoApp
+   participant Clerk
+   participant ConvexProviderWithClerk
+   participant Convex
+
+   User->>ExpoApp: Open app, enter credentials
+   ExpoApp->>Clerk: Sign in / Sign up
+   Clerk-->>ExpoApp: Clerk JWT (session token)
+   ExpoApp->>ExpoApp: Store JWT in SecureStore
+   Note right of ExpoApp: JWT is now available for all requests
+   loop Every Convex request
+      ExpoApp->>ConvexProviderWithClerk: Make Convex query/mutation
+      ConvexProviderWithClerk->>Convex: Attach Clerk JWT as Authorization header
+      Convex->>Clerk: Validate JWT (decode & check signature)
+      Clerk-->>Convex: User identity (if valid)
+      Convex-->>ConvexProviderWithClerk: Data (if authenticated)
+      ConvexProviderWithClerk-->>ExpoApp: Data
+   end
+   ExpoApp-->>User: Show authenticated UI
+```
+
+**Key Points:**
+
+- After sign-in/sign-up, Clerk issues a JWT to the Expo app
+- Expo stores the JWT in SecureStore (or similar)
+- **The ConvexProviderWithClerk automatically retrieves the current Clerk JWT from Clerk and attaches it as an Authorization header to every Convex request**
+- You do not need to manually fetch or set the token; the provider keeps it in sync with Clerk’s session state
+- Convex validates the JWT with Clerk on every request (no local user table needed)
+- Clerk is always the source of truth for user identity
+
+---
+
+### How ConvexProviderWithClerk Handles the JWT Exchange
+
+- The `ConvexProviderWithClerk` (from `convex/react-clerk`) automatically retrieves the current Clerk JWT from the Clerk session.
+- On every Convex query or mutation, the provider attaches the JWT as an Authorization header to the request.
+- You do **not** need to manually fetch or set the token; the provider keeps it in sync with Clerk’s session state.
+- When the Clerk session changes (sign-in, sign-out, token refresh), the provider updates the JWT automatically for all future Convex requests.
+
+**In summary:** The provider abstracts away the token management, ensuring Convex always receives a valid, up-to-date Clerk JWT for every request.
 
 ---
 
