@@ -21,7 +21,7 @@ const applicationID = "convex";
 const authConfig = {
   providers: [
     {
-      domain: "https://nautical-elephant-62.convex.cloud",
+      domain: "https://amusing-elf-39.clerk.accounts.dev",
       applicationID,
     },
   ],
