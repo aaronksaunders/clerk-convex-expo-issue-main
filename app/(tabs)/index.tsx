@@ -1,18 +1,28 @@
 import { useAuth } from "@clerk/clerk-expo";
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import React from "react";
 import { Button, Text, View } from "react-native";
 import { api } from "../../convex/_generated/api";
 
-export default function Home() {
+/**
+ * Home screen component that displays user authentication status and Convex data
+ * Shows Clerk session information and Convex user identity
+ * Provides sign-out functionality with session cleanup
+ * @returns JSX.Element - The home screen UI
+ */
+export default function Home(): React.JSX.Element {
   const { isSignedIn, isLoaded, userId, sessionId, signOut } = useAuth();
+  const { isAuthenticated, isLoading } = useConvexAuth();
   const whoami = useQuery(
     api.whoami.whoami,
     isLoaded && isSignedIn ? undefined : "skip"
   );
 
-  // Helper to clear Clerk session token from SecureStore
-  async function clearClerkSession() {
+  /**
+   * Helper function to clear Clerk session token from SecureStore
+   * Used during sign-out to ensure complete session cleanup
+   */
+  async function clearClerkSession(): Promise<void> {
     try {
       const SecureStore = await import("expo-secure-store");
       await SecureStore.deleteItemAsync("__session");
@@ -74,9 +84,18 @@ export default function Home() {
           Welcome to the Clerk + Convex Demo
         </Text>
         <View style={{ marginBottom: 20, width: "100%" }}>
-          <Text style={{ fontWeight: "bold", marginBottom: 4 }}>
-            Clerk Session State
-          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 8,
+            }}
+          >
+            <Text style={{ fontSize: 20, marginRight: 8 }}>🔐</Text>
+            <Text style={{ fontWeight: "bold", fontSize: 16 }}>
+              Clerk Session State
+            </Text>
+          </View>
           <Text>isLoaded: {String(isLoaded)}</Text>
           <Text>isSignedIn: {String(isSignedIn)}</Text>
           <Text>User ID: {userId ?? "-"}</Text>
@@ -100,9 +119,20 @@ export default function Home() {
         )}
         {whoami && !(whoami instanceof Error) && (
           <View style={{ marginTop: 24, width: "100%" }}>
-            <Text style={{ fontWeight: "bold", marginBottom: 4 }}>
-              Convex Identity
-            </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 8,
+              }}
+            >
+              <Text style={{ fontSize: 20, marginRight: 8 }}>⚡</Text>
+              <Text style={{ fontWeight: "bold", fontSize: 16 }}>
+                Convex Identity
+              </Text>
+            </View>
+            <Text>isAuthenticated: {String(isAuthenticated)}</Text>
+            <Text>isLoading: {String(isLoading)}</Text>
             <Text selectable>Subject: {whoami?.subject}</Text>
             <Text selectable>
               Provider: {whoami?.provider?.toLocaleString()}

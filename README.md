@@ -2,23 +2,25 @@
 
 This project demonstrates a full-stack authentication and data flow using:
 
-- **[Clerk](https://clerk.com/):** Authentication
-- **[Convex](https://convex.dev/):** Backend/database
-- **[Expo](https://expo.dev/):** React Native app platform
+- **[Clerk](https://clerk.com/):** Authentication and user management
+- **[Convex](https://convex.dev/):** Backend/database with real-time capabilities
+- **[Expo](https://expo.dev/):** React Native app platform with file-based routing
 
-It is based on the official Clerk and Convex quickstart templates, with extra notes for quirks and integration details.
+It is based on the official Clerk and Convex quickstart templates, with comprehensive JSDoc documentation and extra notes for quirks and integration details.
 
 ---
 
 ## 📋 What This Project Does
 
-- Provides sign-in/sign-out and session management using Clerk
-- Passes the Clerk JWT token to Convex so backend queries are authenticated
-- Uses Convex to run protected queries (e.g., `whoami`) that require a valid Clerk user
-- Shows how to sync authentication state between Clerk and Convex in a React Native/Expo app
-- Demonstrates a user-owned task list (Tasks tab) where each user's data is private and authenticated via Clerk/Convex
-- No user table is synced between Clerk and Convex; all user identity is derived live from Clerk JWT via `ctx.auth.getUserIdentity()` in Convex functions
-- If you want to store extra user-specific data, create a `users` table in Convex and upsert on first login (no webhook required)
+- **Authentication Flow**: Provides sign-in/sign-up with email verification using Clerk
+- **Session Management**: Handles secure token storage with Expo SecureStore
+- **Real-time Data**: Uses Convex for backend/database with real-time capabilities
+- **Protected Routes**: Demonstrates authentication-based navigation and route protection
+- **User Data**: Shows user-owned task list where each user's data is private and authenticated
+- **JWT Integration**: Passes Clerk JWT tokens to Convex for authenticated backend queries
+- **No User Sync**: All user identity is derived live from Clerk JWT via `ctx.auth.getUserIdentity()`
+- **TypeScript**: Fully typed with comprehensive JSDoc documentation
+- **Modern UI**: Clean, responsive design with proper loading states and error handling
 
 ---
 
@@ -74,13 +76,15 @@ npx expo start
 
 > **Note:** These are common stumbling blocks and tips for smooth development.
 
-- **No user sync needed:** Convex does not require a user table to be synced with Clerk. All user identity is checked live via JWT on every request.
+- **No User Sync Needed:** Convex does not require a user table to be synced with Clerk. All user identity is checked live via JWT on every request.
 - **Token Sync:** Convex and Clerk auth state are not always in sync instantly. Use `useConvexAuth()` to check if Convex is ready before running authenticated queries.
 - **ConvexProviderWithClerk:** This provider automatically passes the Clerk JWT to Convex. You do not need to manually fetch or set the token.
-- **auth.config.ts domain:** The `domain` must match your Clerk instance's issuer (not your Convex URL!). If you see `No auth provider found matching the given token`, check this value.
+- **Auth Config Domain:** The `domain` in `auth.config.ts` must match your Clerk instance's issuer (not your Convex URL!). If you see `No auth provider found matching the given token`, check this value.
 - **Session Persistence:** The app uses `expo-secure-store` for Clerk session tokens. If you have session issues, try clearing SecureStore or reinstalling the app.
-- **Never edit node_modules:** Ignore warnings or errors from `node_modules/convex/tsconfig.json`—these do not affect your app.
-- **Development keys:** Clerk will warn if you use development keys in production. Always use production keys for deployed apps.
+- **Navigation Flash:** The app includes a small delay to prevent flash of incorrect content during startup. This is handled in the `InitialLayout` component.
+- **TypeScript:** All components are fully typed with JSDoc documentation. Avoid using `any` types where possible.
+- **Never Edit node_modules:** Ignore warnings or errors from `node_modules/convex/tsconfig.json`—these do not affect your app.
+- **Development Keys:** Clerk will warn if you use development keys in production. Always use production keys for deployed apps.
 
 ---
 
@@ -136,63 +140,97 @@ sequenceDiagram
 
 ## 📁 File Structure
 
-- `app/` — Expo Router app directory (screens, layouts)
-- `convex/` — Convex backend functions and auth config
-- `.env` / `.env.local` — Environment variables for Clerk and Convex
+```
+├── app/                          # Expo Router app directory
+│   ├── _layout.tsx              # Root layout with auth providers
+│   ├── sign-in.tsx              # Sign-in screen with form validation
+│   ├── sign-up.tsx              # Sign-up screen with email verification
+│   └── (tabs)/                  # Tab navigation group
+│       ├── _layout.tsx          # Tab navigation layout
+│       ├── index.tsx            # Home screen with auth status
+│       └── tasks/
+│           └── index.tsx        # Tasks screen with CRUD operations
+├── convex/                      # Convex backend functions
+│   ├── auth.config.ts           # Clerk authentication configuration
+│   ├── schema.ts                # Database schema definitions
+│   ├── tasks.ts                 # Task-related queries and mutations
+│   └── whoami.ts                # User identity query
+├── assets/                      # Static assets (images, fonts)
+├── android/                     # Android-specific configuration
+└── package.json                 # Dependencies and scripts
+```
+
+### Key Files
+
+- **`app/_layout.tsx`**: Root layout with Clerk and Convex providers, handles authentication-based navigation
+- **`app/sign-in.tsx`**: Sign-in screen with email/password authentication
+- **`app/sign-up.tsx`**: Sign-up screen with email verification flow
+- **`app/(tabs)/index.tsx`**: Home screen displaying auth status and Convex data
+- **`app/(tabs)/tasks/index.tsx`**: Task management screen with real-time data
+- **`convex/tasks.ts`**: Backend functions for task CRUD operations
+- **`convex/whoami.ts`**: User identity query for debugging auth state
 
 ---
+
+## 🚀 Quick Start
+
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Set up environment variables**
+   ```bash
+   # Create .env file with your keys
+   EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=your-clerk-key
+   EXPO_PUBLIC_CONVEX_URL=your-convex-url
+   ```
+
+3. **Configure Convex auth**
+   - Update `convex/auth.config.ts` with your Clerk domain
+   - Deploy your Convex backend
+
+4. **Start the app**
+   ```bash
+   npx expo start
+   ```
 
 ## 📚 References
 
 - [Clerk Expo Quickstart](https://github.com/clerk/clerk-expo-quickstart)
 - [Convex Docs: Auth with Clerk](https://docs.convex.dev/auth/clerk)
-- [Expo Docs](https://docs.expo.dev/)
+- [Expo Router Documentation](https://docs.expo.dev/router/introduction/)
+- [Expo Documentation](https://docs.expo.dev/)
 
----
+## 🛠️ Development
 
-## Get started
+### Available Scripts
 
-1. Install dependencies
+- `npm start` - Start the Expo development server
+- `npm run android` - Run on Android device/emulator
+- `npm run ios` - Run on iOS device/simulator
+- `npm run web` - Run in web browser
 
-   ```bash
-   npm install
-   ```
+### Development Options
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+You can open the app in:
+- [Development build](https://docs.expo.dev/develop/development-builds/introduction/)
 - [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- [Expo Go](https://expo.dev/go) (limited sandbox)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Code Structure
 
-## Get a fresh project
+This project uses [file-based routing](https://docs.expo.dev/router/introduction/) with Expo Router. All screens are in the `app/` directory with comprehensive JSDoc documentation.
 
-When you're ready, run:
+## 🤝 Contributing
 
-```bash
-npm run reset-project
-```
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes with proper JSDoc documentation
+4. Test thoroughly
+5. Submit a pull request
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 📄 License
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+This project is open source and available under the [MIT License](LICENSE).

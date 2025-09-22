@@ -2,7 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
 
-export default function TabsLayout() {
+/**
+ * Tab navigation layout component for the main authenticated app
+ * Provides bottom tab navigation between Home and Tasks screens
+ * @returns JSX.Element - The tab navigation layout
+ */
+export default function TabsLayout(): React.JSX.Element {
   return (
     <Tabs>
       <Tabs.Screen

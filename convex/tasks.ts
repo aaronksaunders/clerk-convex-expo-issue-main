@@ -1,7 +1,11 @@
 import { mutationGeneric, queryGeneric } from "convex/server";
 import { v } from "convex/values";
 
-// Query: Get all tasks for the current user
+/**
+ * Query to get all tasks for the current authenticated user
+ * Returns an empty array if user is not authenticated
+ * @returns Promise<Array> - Array of task objects owned by the current user
+ */
 export const get = queryGeneric({
   args: {},
   handler: async (ctx) => {
@@ -14,7 +18,14 @@ export const get = queryGeneric({
   },
 });
 
-// Mutation: Add a new task for the current user
+/**
+ * Mutation to add a new task for the current authenticated user
+ * Requires authentication and validates the user identity
+ * @param args - Object containing the task text
+ * @param args.text - The text content of the task to be created
+ * @returns Promise<string> - The ID of the newly created task
+ * @throws Error if user is not authenticated
+ */
 export const add = mutationGeneric({
   args: { text: v.string() },
   handler: async (ctx, args) => {

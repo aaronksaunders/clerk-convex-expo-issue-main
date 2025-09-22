@@ -11,13 +11,26 @@ import {
 } from "react-native";
 import { api } from "../../../convex/_generated/api";
 
-export default function TasksScreen() {
+/**
+ * Tasks screen component that displays and manages user tasks
+ * Provides functionality to add new tasks and view existing ones
+ * Uses Convex for data persistence with Clerk authentication
+ * @returns JSX.Element - The tasks screen UI
+ */
+export default function TasksScreen(): React.JSX.Element {
   const { userId, isSignedIn } = useAuth();
-  const [taskText, setTaskText] = useState("");
+  /** Text input state for new task creation */
+  const [taskText, setTaskText] = useState<string>("");
+  /** Query to fetch user's tasks from Convex */
   const tasks = useQuery(api.tasks.get, isSignedIn ? {} : "skip");
+  /** Mutation to add a new task to Convex */
   const addTask = useMutation(api.tasks.add);
 
-  const handleAddTask = async () => {
+  /**
+   * Handles adding a new task to the database
+   * Validates input and clears the text field after successful addition
+   */
+  const handleAddTask = async (): Promise<void> => {
     if (!taskText.trim()) return;
     await addTask({ text: taskText });
     setTaskText("");
@@ -51,6 +64,10 @@ export default function TasksScreen() {
   );
 }
 
+/**
+ * StyleSheet for the Tasks screen component
+ * Defines consistent styling for the task management interface
+ */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
